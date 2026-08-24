@@ -1,0 +1,16 @@
+{
+  "name": "tradebotpro-wss-relay",
+  "version": "1.0.0",
+  "description": "Stateful WebSocket relay for TradeBot Pro EA — bridges MT5 WSS to Base44 serverless HTTP",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
