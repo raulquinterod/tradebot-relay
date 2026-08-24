@@ -1,36 +1,37 @@
 /* global process, Buffer */
 //+------------------------------------------------------------------+
-//| TradeBot Pro — Stateful WSS Relay                                 |
+//| TradeBot Pro — Stateful WSS Relay                                |
 //|                                                                  |
-//| PROPÓSITO: Puente persistente entre el EA (MQL5 WSS nativo) y     |
-//|   el backend serverless de Base44 (HTTP POST).                    |
+//| PROPÓSITO: Puente persistente entre el EA (MQL5 WSS nativo) y    |
+//|   el backend serverless de Base44 (HTTP POST).                   |
 //|                                                                  |
-//| ARQUITECTURA:                                                     |
-//|   EA (MQL5 WSS) ──persistent──→ este relay ──HTTP POST──→ Base44  |
+//| ARQUITECTURA:                                                    |
+//|   EA (MQL5 WSS) ──persistent──→ este relay ──HTTP POST──→ Base44 |
 //|                                                                  |
-//| DESPLIEGUE:                                                       |
-//|   1. Sube package.json + server.js a un repo de GitHub            |
-//|   2. Render.com → New Web Service → conecta el repo               |
-//|   3. Build: npm install | Start: npm start | Plan: Free           |
-//|   4. Obtén URL: wss://tradebotpro-relay.onrender.com/ws           |
+//| DESPLIEGUE:                                                      |
+//|   1. Sube package.json + server.js a un repo de GitHub           |
+//|   2. Render.com → New Web Service → conecta el repo              |
+//|   3. Build: npm install | Start: npm start | Plan: Free          |
+//|   4. Obtén URL: wss://tradebotpro-relay.onrender.com/ws          |
 //|   5. Configura en el EA: InpServerHost = "tradebotpro-relay.onrender.com"
-//|      InpServerPort = 443 | InpWssPath = "/ws"                     |
+//|      InpServerPort = 443 | InpWssPath = "/ws"                    |
 //|                                                                  |
-//| MENSAJES (EA → Relay):                                            |
-//|   { type: "ping", client_ts, seq }      → latencia probe          |
-//|   { type: "tick", pair, bid, ask, ts }   → telemetría tick         |
-//|   { type: "signal_request", body }       → evaluar señal          |
+//| MENSAJES (EA → Relay):                                           |
+//|   { type: "ping", client_ts, seq }       → latencia probe        |
+//|   { type: "tick", pair, bid, ask, ts }   → telemetría tick       |
+//|   { type: "signal_request", body }       → evaluar señal         |
 //|                                                                  |
-//| MENSAJES (Relay → EA):                                            |
-//|   { type: "welcome", server_ts }         → handshake inicial      |
-//|   { type: "pong", server_ts, client_ts } → respuesta latencia     |
+//| MENSAJES (Relay → EA):                                           |
+//|   { type: "welcome", server_ts }         → handshake inicial     |
+//|   { type: "pong", server_ts, client_ts } → respuesta latencia    |
 //|   { type: "signal_response", status, data } → resultado eval     |
 //+------------------------------------------------------------------+
 import { WebSocketServer } from 'ws';
 import http from 'http';
 
 // --- Configuración ---
-const PORT = process.env.PORT || 8080;
+// CORRECCIÓN: Aseguramos que el puerto sea un número matemático para evitar concatenación de strings
+const PORT = parseInt(process.env.PORT, 10) || 8080;
 const BASE44_APP_HOST = process.env.BASE44_APP_HOST || 'smart-trade-pulse-sophisticated.base44.app';
 const SIGNAL_ENDPOINT = process.env.SIGNAL_ENDPOINT || '/functions/mt5Webhook';
 const MAX_TICK_BUFFER = 5000;
